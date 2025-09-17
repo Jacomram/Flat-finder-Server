@@ -13,6 +13,14 @@
   "dependencies": {
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "mongoose": "^8.18.0"
-  }
+    "mongoose": "^8.18.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jacomram/Flat-finder-Server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Jacomram/Flat-finder-Server/issues"
+  },
+  "homepage": "https://github.com/Jacomram/Flat-finder-Server#readme"
 }
