@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flat Finder - Apartment Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .auth-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .flats-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .flats-section.show {
+            display: block;
+        }
+
+        .flat-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .flat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .flat-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .flat-info {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .flat-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-small:hover {
+            background: #5a67d8;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .api-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+
+        .api-info h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+
+        .api-endpoint {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.online {
+            background: #28a745;
+        }
+
+        .status-indicator.offline {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Flat Finder</h1>
+            <p>Find your perfect home</p>
+            <div style="margin-top: 15px;">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="serverStatus">Connecting...</span>
+            </div>
+        </div>
+
+        <div id="messageArea"></div>
+
+        <div class="auth-section" id="authSection">
+            <div class="auth-tabs">
+                <button class="tab-button active" onclick="switchTab('login')">Sign In</button>
+                <button class="tab-button" onclick="switchTab('register')">Sign Up</button>
+            </div>
+
+            <div id="loginTab" class="tab-content active">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Sign In</button>
+                </form>
+            </div>
+
+            <div id="registerTab" class="tab-content">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerName">Name:</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password:</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Sign Up</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flats-section" id="flatsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2>Available Flats</h2>
+                <div>
+                    <button class="btn-small" onclick="loadFlats()">🔄 Refresh</button>
+                    <button class="btn-small" onclick="logout()" style="background: #dc3545; margin-left: 10px;">Sign Out</button>
+                </div>
+            </div>
+            <div id="flatsContainer">
+                <p>Loading flats...</p>
+            </div>
+        </div>
+
+        <div class="api-info">
+            <h3>📡 API Information</h3>
+            <p><strong>Available endpoints:</strong></p>
+            <div class="api-endpoint">POST /users/login - Sign in</div>
+            <div class="api-endpoint">POST /users/register - Register user</div>
+            <div class="api-endpoint">GET /flats - Get all flats</div>
+            <div class="api-endpoint">POST /flats - Create new flat</div>
+            <div class="api-endpoint">GET /flats/:id/messages - Get flat messages</div>
+            <div class="api-endpoint">POST /flats/:id/messages - Send message about a flat</div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+        // Check server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: '', password: '' })
+                });
+                
+                document.getElementById('statusIndicator').className = 'status-indicator online';
+                document.getElementById('serverStatus').textContent = 'Server connected';
+            } catch (error) {
+                document.getElementById('statusIndicator').className = 'status-indicator offline';
+                document.getElementById('serverStatus').textContent = 'Server disconnected';
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            checkServerStatus();
+            
+            if (authToken && currentUser) {
+                showFlatsSection();
+                loadFlats();
+            }
+        };
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        function showMessage(message, type = 'success') {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        function showFlatsSection() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('flatsSection').classList.add('show');
+        }
+
+        function showAuthSection() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('flatsSection').classList.remove('show');
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/users/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    
+                    showMessage('Successfully signed in!');
+                    showFlatsSection();
+                    loadFlats();
+                } else {
+                    showMessage(data.message || 'Error signing in', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error with server', 'error');
+            }
+        });
+
+        // Register form handler
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch('/users/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('User registered successfully! You can now sign in.');
+                    switchTab('login');
+                } else {
+                    showMessage(data.message || 'Error registering user', 'error');
+                }
+            } catch (error) {
+                showMessage('Connection error with server', 'error');
+            }
+        });
+
+        // Load flats
+        async function loadFlats() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch('/flats', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayFlats(data);
+                } else {
+                    showMessage('Error loading flats', 'error');
+                    if (response.status === 401) {
+                        logout();
+                    }
+                }
+            } catch (error) {
+                showMessage('Connection error with server', 'error');
+            }
+        }
+
+        function displayFlats(flats) {
+            const container = document.getElementById('flatsContainer');
+            
+            if (flats.length === 0) {
+                container.innerHTML = '<p>No flats available at the moment.</p>';
+                return;
+            }
+            
+            container.innerHTML = flats.map(flat => `
+                <div class="flat-card">
+                    <div class="flat-title">${flat.title || 'Flat without title'}</div>
+                    <div class="flat-info">
+                        <p><strong>Location:</strong> ${flat.location || 'Not specified'}</p>
+                        <p><strong>Price:</strong> ${flat.price ? flat.price + '€' : 'Not specified'}</p>
+                        <p><strong>Description:</strong> ${flat.description || 'No description'}</p>
+                    </div>
+                    <div class="flat-actions">
+                        <button class="btn-small" onclick="viewMessages('${flat._id}')">View Messages</button>
+                        <button class="btn-small" onclick="sendMessage('${flat._id}')">Send Message</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewMessages(flatId) {
+            showMessage('View messages feature in development...', 'info');
+        }
+
+        function sendMessage(flatId) {
+            const message = prompt('Write your message:');
+            if (message) {
+                showMessage('Send message feature in development...', 'info');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            
+            showMessage('Session closed successfully');
+            showAuthSection();
+        }
+    </script>
+</body>
+</html>
