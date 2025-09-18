@@ -14,9 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // Import routes
-const userRoutes = require('./routes/userRoutes');
-const flatRoutes = require('./routes/flatRoutes');
-const messageRoutes = require('./routes/messageRoutes');
+const userRoutes = require('./Routes/userRoutes');
+const flatRoutes = require('./Routes/flatRoutes');
+const messageRoutes = require('./Routes/messageRoutes');
 
 // Use routes
 app.use('/users', userRoutes);
@@ -31,10 +31,7 @@ app.get('/', (req, res) => {
 });
 
 // Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/flat-finder', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/flat-finder')
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 

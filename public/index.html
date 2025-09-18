@@ -272,8 +272,12 @@
             <div id="registerTab" class="tab-content">
                 <form id="registerForm">
                     <div class="form-group">
-                        <label for="registerName">Name:</label>
-                        <input type="text" id="registerName" required>
+                        <label for="registerFirstName">First Name:</label>
+                        <input type="text" id="registerFirstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerLastName">Last Name:</label>
+                        <input type="text" id="registerLastName" required>
                     </div>
                     <div class="form-group">
                         <label for="registerEmail">Email:</label>
@@ -282,6 +286,10 @@
                     <div class="form-group">
                         <label for="registerPassword">Password:</label>
                         <input type="password" id="registerPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerBirthDate">Birth Date:</label>
+                        <input type="date" id="registerBirthDate" required>
                     </div>
                     <button type="submit" class="btn">Sign Up</button>
                 </form>
@@ -320,16 +328,16 @@
         // Check server status
         async function checkServerStatus() {
             try {
-                const response = await fetch('/users/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email: '', password: '' })
-                });
+                // Use a simple GET request to check server status instead of login
+                const response = await fetch('/');
                 
-                document.getElementById('statusIndicator').className = 'status-indicator online';
-                document.getElementById('serverStatus').textContent = 'Server connected';
+                if (response.ok) {
+                    document.getElementById('statusIndicator').className = 'status-indicator online';
+                    document.getElementById('serverStatus').textContent = 'Server connected';
+                } else {
+                    document.getElementById('statusIndicator').className = 'status-indicator offline';
+                    document.getElementById('serverStatus').textContent = 'Server error';
+                }
             } catch (error) {
                 document.getElementById('statusIndicator').className = 'status-indicator offline';
                 document.getElementById('serverStatus').textContent = 'Server disconnected';
@@ -351,8 +359,8 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            // Add active class to selected tab
-            event.target.classList.add('active');
+            // Add active class to selected tab button
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
@@ -413,9 +421,11 @@
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const name = document.getElementById('registerName').value;
+            const firstName = document.getElementById('registerFirstName').value;
+            const lastName = document.getElementById('registerLastName').value;
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
+            const birthDate = document.getElementById('registerBirthDate').value;
             
             try {
                 const response = await fetch('/users/register', {
@@ -423,7 +433,13 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ 
+                        firstName, 
+                        lastName, 
+                        email, 
+                        password, 
+                        birthDate 
+                    })
                 });
                 
                 const data = await response.json();
@@ -431,6 +447,8 @@
                 if (response.ok) {
                     showMessage('User registered successfully! You can now sign in.');
                     switchTab('login');
+                    // Clear form
+                    document.getElementById('registerForm').reset();
                 } else {
                     showMessage(data.message || 'Error registering user', 'error');
                 }
