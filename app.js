@@ -14,9 +14,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // Import routes
-const userRoutes = require('./Routes/userRoutes');
-const flatRoutes = require('./Routes/flatRoutes');
-const messageRoutes = require('./Routes/messageRoutes');
+const userRoutes = require('./routes/userRoutes');
+const flatRoutes = require('./routes/flatRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 // Use routes
 app.use('/users', userRoutes);

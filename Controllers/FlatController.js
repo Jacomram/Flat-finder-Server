@@ -35,7 +35,7 @@ class FlatController {
       const flatData = req.body;
       
       // Add the current user as the owner
-      flatData.ownerId = req.user.id;
+      flatData.ownerid = req.user.id;
       
       const newFlat = await FlatServices.addFlat(flatData);
       
@@ -45,7 +45,19 @@ class FlatController {
       });
     } catch (error) {
       console.error('Error creating flat:', error);
-      res.status(500).json({ message: 'Error creating flat' });
+      
+      // Check if it's a validation error
+      if (error.message.includes('Missing required fields') || 
+          error.message.includes('Invalid date format') || 
+          error.message.includes('must be a positive number') ||
+          error.message.includes('must be a valid year')) {
+        return res.status(400).json({ 
+          message: 'Validation error', 
+          error: error.message.replace('Error creating flat in database: ', '')
+        });
+      }
+      
+      res.status(500).json({ message: 'Internal server error creating flat' });
     }
   }
 

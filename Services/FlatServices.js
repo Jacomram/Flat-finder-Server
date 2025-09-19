@@ -27,22 +27,52 @@ class FlatServices {
   // Add new flat
   static async addFlat(flatData) {
     try {
+      // Validate required fields
+      const requiredFields = ['city', 'streetname', 'streetnumber', 'areasize', 'yearofbuild', 'rent', 'dateavailable', 'ownerid'];
+      const missingFields = requiredFields.filter(field => !flatData[field]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      }
+
+      // Validate and parse date
+      let dateAvailable;
+      if (flatData.dateavailable) {
+        dateAvailable = new Date(flatData.dateavailable);
+        if (isNaN(dateAvailable.getTime())) {
+          throw new Error('Invalid date format for dateavailable. Please use a valid date format (e.g., YYYY-MM-DD or ISO 8601)');
+        }
+      } else {
+        throw new Error('dateavailable field is required');
+      }
+
+      // Validate numeric fields
+      if (isNaN(flatData.areasize) || flatData.areasize <= 0) {
+        throw new Error('areasize must be a positive number');
+      }
+      if (isNaN(flatData.yearofbuild) || flatData.yearofbuild < 1800 || flatData.yearofbuild > new Date().getFullYear()) {
+        throw new Error('yearofbuild must be a valid year');
+      }
+      if (isNaN(flatData.rent) || flatData.rent <= 0) {
+        throw new Error('rent must be a positive number');
+      }
+
       // Generate unique ID for the flat
       const flatId = uuidv4();
       
       // Create new flat with the provided data
       const newFlat = new Flat({
         id: flatId,
-        city: flatData.city,
-        streetname: flatData.streetname,
-        streetnumber: flatData.streetnumber,
-        areasize: flatData.areasize,
-        hasAc: flatData.hasAc || false,
-        yearofbuild: flatData.yearofbuild,
-        rent: flatData.rent,
-        dateavailable: new Date(flatData.dateavailable),
-        ownerid: flatData.ownerId,
-        createdBy: flatData.ownerId,
+        city: flatData.city.trim(),
+        streetname: flatData.streetname.trim(),
+        streetnumber: flatData.streetnumber.trim(),
+        areasize: Number(flatData.areasize),
+        hasAc: Boolean(flatData.hasAc),
+        yearofbuild: Number(flatData.yearofbuild),
+        rent: Number(flatData.rent),
+        dateavailable: dateAvailable,
+        ownerid: flatData.ownerid,
+        createdBy: flatData.ownerid,
         updatedBy: ""
       });
 
@@ -50,7 +80,7 @@ class FlatServices {
       return savedFlat;
     } catch (error) {
       console.error('Error in FlatServices.addFlat:', error);
-      throw new Error('Error creating flat in database');
+      throw new Error(`Error creating flat in database: ${error.message}`);
     }
   }
 
